@@ -1,0 +1,120 @@
+function make_infile_from_frf_10day()
+  % --- USER-DEFSETTINGS ---
+  t0 = datetime(2024,7,1,0,0,0,'TimeZone','UTC');
+  t1 = datetime(2024,7,11,0,0,0,'TimeZone','UTC'); % end exclusive
+
+  % THREDDS OPeNDAP URLs (monthly files)
+  waves_url = "https://chldata.erdc.dren.mil/thredds/dodsC/frf/oceanography/waves/waverider-17m/2024/FRF-ocean_waves_waverider-17m_202407.nc";
+  wl_url    = "https://chldata.erdc.dren.mil/thredds/dodsC/frf/oceanography/waterlevel/eopNoaaTide/2024/FRF-ocean_waterlevel_eopNoaaTide_202407.nc";
+
+  % If OPeNDAP gives you trouble, download files locally and replace URLs with filenames:
+  % waves_url = "FRF-ocean_waves_waverider-17m_202407.nc";
+  % wl_url    = "FRF-ocean_waterlevel_eopNoaaTide_202407.nc";
+
+  % --- Load your defaults struct ---
+  in = set_defaults();
+
+  % --- Read WAVES ---
+  % time in these wave files is seconds since 1970-01-01 (Unix epoch) :contentReference[oaicite:1]{index=1}
+  tw = ncread(waves_url, "time");
+  Hs = ncread(waves_url, "waveHs");   % m :contentReference[oaicite:2]{index=2}
+  Tp = ncread(waves_url, "waveTp");   % s :contentReference[oaicite:3]{index=3}
+
+  % Direction (use mean direction if present, else peak dir)
+  vars = {ncinfo(waves_url).Variables.Name};
+  if any(strcmp(vars,"waveMeanDirection"))
+    Dir = ncread(waves_url, "waveMeanDirection"); % deg, MET "from" convention :contentReference[oaicite:4]{index=4}
+  else
+    Dir = ncread(waves_url, "wavePeakDirectionPeakFrequency"); % deg :contentReference[oaicite:5]{index=5}
+  end
+
+  time_w = datetime(1970,1,1,0,0,0,'TimeZone','UTC') + seconds(tw);
+
+  % Subset time window
+  iw = (time_w >= t0) & (time_w < t1);
+  time_w = time_w(iw);
+  Hs = Hs(iw);
+  Tp = Tp(iw);
+  Dir = Dir(iw);
+
+  % Convert to table for resampling
+  Tw = timetable(time_w, Hs, Tp, Dir);
+
+  % --- Read WATER LEVEL ---
+  % We don’t hard-code variable names here (THREDDS pages can be finicky),
+  % instead we try common ones and fall back if needed.
+  infoWL = ncinfo(wl_url);
+  wlVars = {infoWL.Variables.Name};
+
+  t_wl = ncread(wl_url,"time");
+  time_wl = datetime(1970,1,1,0,0,0,'TimeZone','UTC') + seconds(t_wl);
+
+  % try likely variable names
+  cand = ["waterLevel","WaterLevel","observedWaterLevel","wl"];
+  vname = "";
+  for k = 1:numel(cand)
+    if any(strcmp(wlVars, cand(k)))
+      vname = cand(k);
+      break
+    end
+  end
+  if vname == ""
+    error("Couldn't find a water level variable in %s. Variables are:\n%s", ...
+      wl_url, strjoin(wlVars, ", "));
+  end
+  wl = ncread(wl_url, vname);
+
+  iwl = (time_wl >= t0) & (time_wl < t1);
+  time_wl = time_wl(iwl);
+  wl = wl(iwl);
+
+  TWL = timetable(time_wl, wl);
+
+  % --- Resample both to hourly ---
+  Tw_hr  = retime(Tw,  "hourly", "mean");
+  TWL_hr = retime(TWL, "hourly", "mean");
+
+  % Synchronize on common timestamps
+  Tall = synchronize(Tw_hr, TWL_hr, "intersection");
+  Tall = rmmissing(Tall);
+
+  % --- Build CSHORE boundary arrays ---
+  % Many CSHORE example infiles use Hrms; FRF provides Hs.
+  % Typical relation: Hrms = Hs/sqrt(2)
+  Hrms = Tall.Hs ./ sqrt(2);
+
+  % Start simple: normal incidence
+  angle_cshore = zeros(size(Hrms));
+
+  % Water level: for your *synthetic* profile, use relative WL so you don’t immediately exceed crest
+  % (Once you use a real NAVD88 profile, you should use absolute WL.)
+  swl_rel = Tall.wl - median(Tall.wl,"omitnan");
+
+  % Setup at boundary: set 0 for now (unless you have a setup estimate)
+  Wsetup = zeros(size(Hrms));
+
+  % CSHORE uses seconds since model start
+  tstart = Tall.time_w(1);
+  timebc_sec = seconds(Tall.time_w - tstart);
+
+  % --- Populate the in struct ---
+  in.timebc_wave = timebc_sec';
+  in.timebc_surg = timebc_sec';
+  in.nwave = numel(in.timebc_wave);
+  in.nsurg = in.nwave;
+
+  in.Tp = Tall.Tp';
+  in.Hrms = Hrms';
+  in.angle = angle_cshore';
+  in.swlbc = swl_rel';
+  in.Wsetup = Wsetup';
+
+  % Optional: set ILAB=1 if you want the 6-column wave format in makeinfile_usace_vegfeature
+  % in.ilab = 1;
+
+  % --- Write infile in the current folder ---
+  makeinfile_usace_vegfeature(in);
+
+  disp("Wrote infile using FRF 17m waves + water level for:");
+  disp([char(t0) "  to  " char(t1)]);
+end

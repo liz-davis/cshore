@@ -76,8 +76,8 @@ if in.ilab==1
     end
   end
 else
-  fprintf(fid,'%-8i                                  ->NWAVE \n',in.nwave-1);
-  fprintf(fid,'%-8i                                  ->NSURGE \n',in.nsurg-1);
+  fprintf(fid,'%-8i                                  ->NWAVE \n',in.nwave);
+  fprintf(fid,'%-8i                                  ->NSURGE \n',in.nsurg);
   for i = 1:length(in.Hrms)
     if in.iveg<=2
       fprintf(fid,'%11.2f%11.4f%11.4f%11.4f\n', ...
