@@ -84,23 +84,24 @@ function make_infile_from_frf_10day()
   % ---------------------------
   Npts = height(Tall);
   Nint = Npts - 1;
+  idx  = 1:Nint;
 
+  % Populate struct
+  in.timebc_wave = timebc_sec(idx)';  % row vector
+  in.timebc_surg = timebc_sec(idx)';  % row vector
   in.nwave = Nint;
   in.nsurg = Nint;
 
-  % Important: provide Nint_1 = (Npts) records
-  in.timebc_wave = timebc_sec(:)';
-  in.timebc_surg = timebc_sec(:)';
-
-  in.Tp     = Tall.Tp(:)';
-  in.Hrms   = Hrms(:)';
-  in.angle  = angle_cshore(:)';
-  in.swlbc  = swl(:)';
-  in.Wsetup = Wsetup(:)';
+  in.Tp     = Tall.Tp(idx)';          % row vector
+  in.Hrms   = Hrms(idx)';             % row vector
+  in.angle  = angle_cshore(idx)';     % row vector
+  in.swlbc  = swl(idx)';              % row vector
+  in.Wsetup = Wsetup(idx)';           % row vector
 
   % Checks
-  assert(numel(in.timebc_wave) == in.nwave + 1);
-  assert(numel(in.timebc_surg) == in.nsurg + 1);
+  assert(in.nwave == numel(in.timebc_wave), "NWAVE mismatch: nwave=%d, numel(timebc_wave)=%d", in.nwave, numel(in.timebc_wave));
+  assert(in.nsurg == numel(in.timebc_surg), "NSURGE mismatch: nsurg=%d, numel(timebc_surg)=%d", in.nsurg, numel(in.timebc_surg));
+  assert(all(diff(in.timebc_wave) > 0), "timebc_wave is not strictly increasing.");
 
   % Helpful prints
   fprintf("Tall rows: %d\n", Npts);

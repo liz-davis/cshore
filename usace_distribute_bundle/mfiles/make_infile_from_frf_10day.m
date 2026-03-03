@@ -1,7 +1,7 @@
 function make_infile_from_frf_10day()
   % --- USER-DEFINED SETTINGS ---
-  t0 = datetime(2019,11,14,0,0,0,'TimeZone','UTC');
-  t1 = datetime(2019,11,21,0,0,0,'TimeZone','UTC'); % end exclusive
+  t0 = datetime(2020,09,10,0,0,0,'TimeZone','UTC');
+  t1 = datetime(2020,09,25,0,0,0,'TimeZone','UTC'); % hurricane teddy
 
   % THREDDS OPeNDAP URLs (monthly files)
   waves_url = "https://chldata.erdc.dren.mil/thredds/dodsC/frf/oceanography/waves/waverider-26m/2019/FRF-ocean_waves_waverider-26m_201911.nc";
