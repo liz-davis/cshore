@@ -26,7 +26,7 @@ function make_infile_from_frf_10day()
   wl_product = "eopNoaaTide";
 
   % Boundary condition options
-  use_relative_wl = true;   % true for synthetic profile testing; false when using NAVD88 profile
+  use_relative_wl = false;   % true for synthetic profile testing; false when using NAVD88 profile
   use_normal_incidence = true;
 
   % ---------------------------
@@ -113,6 +113,55 @@ function make_infile_from_frf_10day()
   end
   fprintf("WL product: %s\n", wl_product);
 
+  % ---------------------------
+  % External elevation profile (CSV with ONE column: zb values, NAVD88)
+  % x increases offshore -> onshore, 1 m spacing
+  % ---------------------------
+  profile_csv = "/Users/elizabeth/Downloads/output_1m_smoothed_flipped_duck.csv";
+
+  % inputs
+  dx     = 1;        % m
+  z_off  = -8;       % offshore constant depth (NAVD88)
+  L_flat = 100;      % length of constant-depth section (m)
+  L_ramp = 120;      % length of ramp-to-measured section (m) 
+
+  % field measurements
+  zb = readmatrix(profile_csv);
+
+  % force to a single column vector
+  zb = zb(:);
+
+  % remove non-finite (protects the NaN check + Fortran read)
+  zb = zb(isfinite(zb));
+
+  zb_meas = zb(:);    % NAVD88
+  z0 = zb_meas(1);    % first measured point elevation
+
+  % --- build offshore extension ---
+  n_flat = round(L_flat/dx);
+  n_ramp = round(L_ramp/dx);
+
+  zb_flat = z_off * ones(n_flat,1);
+
+  % linear ramp from z_off up to the first measured point elevation
+  zb_ramp = linspace(z_off, z0, n_ramp+1).';
+  zb_ramp = zb_ramp(1:end-1);   % drop endpoint to avoid duplicate with z0
+
+  % --- concatenate ---
+  zb = [zb_flat; zb_ramp; zb_meas];
+
+  % x increases offshore -> onshore, starting at 0
+  x  = (0:numel(zb)-1)' * dx;
+
+  % assign to CSHORE struct
+  in.dx = dx;
+  in.x  = x;
+  in.zb = zb;
+  in.fw = 0.015 * ones(size(zb));   % 
+
+  % quick sanity checks (helpful if something’s off)
+  assert(numel(in.x) == numel(in.zb) && numel(in.x) == numel(in.fw), "Profile vectors must match length.");
+  
   % ---------------------------
   % Write infile
   % ---------------------------

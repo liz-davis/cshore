@@ -14,7 +14,7 @@ in.iwtran = 0;          % 0 = no standing water landward of crest,
                         % 1 = wave transmission due to overtopping
 in.ipond  = 0;          % 0 = no ponding seaward of SWL
 in.iwcint = 0;          % 0 = no W & C interaction , 1 = include W & C interaction
-in.iroll  = 0;          % 0 = no roller, 1 = roller
+in.iroll  = 1;          % 0 = no roller, 1 = roller
 in.iwind  = 0;          % 0 = no wind effect
 in.itide  = 0;          % 0 = no tidal effect on currents
 in.iveg   = 0;          % vegitation effect

@@ -26,7 +26,7 @@ function make_infile_from_frf_10day()
   wl_product = "eopNoaaTide";
 
   % Boundary condition options
-  use_relative_wl = true;   % true for synthetic profile testing; false when using NAVD88 profile
+  use_relative_wl = false;   % true for synthetic profile testing; false when using NAVD88 profile
   use_normal_incidence = true;
 
   % ---------------------------
@@ -84,24 +84,23 @@ function make_infile_from_frf_10day()
   % ---------------------------
   Npts = height(Tall);
   Nint = Npts - 1;
-  idx  = 1:Nint;
 
-  % Populate struct
-  in.timebc_wave = timebc_sec(idx)';  % row vector
-  in.timebc_surg = timebc_sec(idx)';  % row vector
   in.nwave = Nint;
   in.nsurg = Nint;
 
-  in.Tp     = Tall.Tp(idx)';          % row vector
-  in.Hrms   = Hrms(idx)';             % row vector
-  in.angle  = angle_cshore(idx)';     % row vector
-  in.swlbc  = swl(idx)';              % row vector
-  in.Wsetup = Wsetup(idx)';           % row vector
+  % Important: provide Nint_1 = (Npts) records
+  in.timebc_wave = timebc_sec(:)';
+  in.timebc_surg = timebc_sec(:)';
+
+  in.Tp     = Tall.Tp(:)';
+  in.Hrms   = Hrms(:)';
+  in.angle  = angle_cshore(:)';
+  in.swlbc  = swl(:)';
+  in.Wsetup = Wsetup(:)';
 
   % Checks
-  assert(in.nwave == numel(in.timebc_wave), "NWAVE mismatch: nwave=%d, numel(timebc_wave)=%d", in.nwave, numel(in.timebc_wave));
-  assert(in.nsurg == numel(in.timebc_surg), "NSURGE mismatch: nsurg=%d, numel(timebc_surg)=%d", in.nsurg, numel(in.timebc_surg));
-  assert(all(diff(in.timebc_wave) > 0), "timebc_wave is not strictly increasing.");
+  assert(numel(in.timebc_wave) == in.nwave + 1);
+  assert(numel(in.timebc_surg) == in.nsurg + 1);
 
   % Helpful prints
   fprintf("Tall rows: %d\n", Npts);
@@ -114,6 +113,38 @@ function make_infile_from_frf_10day()
   end
   fprintf("WL product: %s\n", wl_product);
 
+  % ---------------------------
+  % External elevation profile (CSV with ONE column: zb values, NAVD88)
+  % x increases offshore -> onshore, 1 m spacing
+  % ---------------------------
+  profile_csv = "/Users/elizabeth/Downloads/output_1m_smoothed_flipped_duck.csv";
+
+  % inputs
+  dx     = 1;        % m
+  z_off  = -8;       % offshore constant depth (NAVD88)
+  L_flat = 100;      % length of constant-depth section (m)
+  L_ramp = 120;      % length of ramp-to-measured section (m) 
+
+  % field measurements
+  zb = readmatrix(profile_csv);
+
+  % force to a single column vector
+  zb = zb(:);
+
+  % remove non-finite (protects the NaN check + Fortran read)
+  zb = zb(isfinite(zb));
+
+  % build x at 1 m spacing starting at 0
+  x = (0:numel(zb)-1)';
+
+  % assign into the 'in' struct for ->NBINP section
+  in.x  = x;                         % must be column or row, writer uses (:)
+  in.zb = zb;                        % same length as in.x
+  in.fw = 0.015 * ones(size(zb));    % third NBINP column (matches your example)
+
+  % quick sanity checks (helpful if something’s off)
+  assert(numel(in.x) == numel(in.zb) && numel(in.x) == numel(in.fw), "Profile vectors must match length.");
+  
   % ---------------------------
   % Write infile
   % ---------------------------
