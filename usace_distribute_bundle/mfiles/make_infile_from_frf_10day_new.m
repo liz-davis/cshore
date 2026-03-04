@@ -117,7 +117,7 @@ function make_infile_from_frf_10day()
   % External elevation profile (CSV with ONE column: zb values, NAVD88)
   % x increases offshore -> onshore, 1 m spacing
   % ---------------------------
-  profile_csv = "/Users/elizabeth/Downloads/output_1m_smoothed_flipped_duck.csv";
+  profile_csv = "/Users/elizabeth/Downloads/output_1m_smoothed_flipped_duck_teddy.csv";
 
   % inputs
   dx     = 1;        % m
