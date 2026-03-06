@@ -69,19 +69,14 @@ function make_infile_from_frf_10day()
       swl = Tall.wl;
   end
 
-  % Setup at boundary (keep 0 for now)
-  Wsetup = zeros(size(Hrms));
+  % Setup at boundary
+  Wsetup = 0.2 * Hrms;
 
   % Time in seconds since model start (CSHORE wants seconds)
   rt = Tall.Properties.RowTimes;   % datetime vector
   tstart = rt(1);
   timebc_sec = seconds(rt - tstart);
 
-  % ---------------------------
-  % IMPORTANT: "intervals" convention (N-1)
-  % Compiled CSHORE build expects NWAVE/NSURGE = number of intervals,
-  % so we use the first (N-1) entries consistently.
-  % ---------------------------
   Npts = height(Tall);
   Nint = Npts - 1;
 
@@ -114,6 +109,17 @@ function make_infile_from_frf_10day()
   fprintf("WL product: %s\n", wl_product);
 
   % ---------------------------
+  % Quick diagnostics: forcing ranges
+  % ---------------------------
+  fprintf('\n--- WAVE FORCING ---\n')
+  fprintf('Tall.Hs  min: %.2f m   max: %.2f m\n', min(Tall.Hs), max(Tall.Hs))
+  fprintf('in.Hrms  min: %.2f m   max: %.2f m\n', min(in.Hrms), max(in.Hrms))
+
+  fprintf('\n--- WATER LEVEL FORCING ---\n')
+  fprintf('Tall.wl  min: %.2f m   max: %.2f m\n', min(Tall.wl), max(Tall.wl))
+  fprintf('in.swlbc min: %.2f m   max: %.2f m\n', min(in.swlbc), max(in.swlbc))
+
+  % ---------------------------
   % External elevation profile (CSV with ONE column: zb values, NAVD88)
   % x increases offshore -> onshore, 1 m spacing
   % ---------------------------
@@ -123,32 +129,43 @@ function make_infile_from_frf_10day()
   dx     = 1;        % m
   z_off  = -8;       % offshore constant depth (NAVD88)
   L_flat = 100;      % length of constant-depth section (m)
-  L_ramp = 120;      % length of ramp-to-measured section (m) 
+  slope_off = 0.01;  % offshore slope (m/m) from z_off up to first measured point 
 
   % field measurements
-  zb = readmatrix(profile_csv);
+  zb_meas = readmatrix(profile_csv);
+  zb_meas = zb_meas(:);
+  zb_meas = zb_meas(isfinite(zb_meas));
 
-  % force to a single column vector
-  zb = zb(:);
+  if numel(zb_meas) < 2
+      error("Measured profile in %s has <2 finite points.", profile_csv);
+  end
 
-  % remove non-finite (protects the NaN check + Fortran read)
-  zb = zb(isfinite(zb));
+  z0 = zb_meas(1);  % first measured elevation (offshore-most measured point)
 
-  zb_meas = zb(:);    % NAVD88
-  z0 = zb_meas(1);    % first measured point elevation
+  if z0 <= z_off
+      warning("First measured point z0=%.3f is <= z_off=%.3f. Offshore slope segment will be skipped.", z0, z_off);
+      n_flat = round(L_flat/dx);
+      zb_flat = z_off * ones(n_flat,1);
+      zb = [zb_flat; zb_meas];
+  else
+      % --- flat section ---
+      n_flat = round(L_flat/dx);
+      zb_flat = z_off * ones(n_flat,1);
 
-  % --- build offshore extension ---
-  n_flat = round(L_flat/dx);
-  n_ramp = round(L_ramp/dx);
+      % --- 0.01 slope section up to z0 ---
+      L_slope = (z0 - z_off) / slope_off;      % meters needed to rise from z_off to z0
+      n_slope = ceil(L_slope / dx);            % number of dx steps (not counting the join point)
 
-  zb_flat = z_off * ones(n_flat,1);
+      x_slope = (0:n_slope)' * dx;             % includes endpoint
+      zb_slope = z_off + slope_off * x_slope;  % perfect slope
+      zb_slope(end) = z0;                      % force exact match at join
 
-  % linear ramp from z_off up to the first measured point elevation
-  zb_ramp = linspace(z_off, z0, n_ramp+1).';
-  zb_ramp = zb_ramp(1:end-1);   % drop endpoint to avoid duplicate with z0
+      % drop the endpoint so we don't duplicate z0 with the first measured point
+      zb_slope = zb_slope(1:end-1);
 
-  % --- concatenate ---
-  zb = [zb_flat; zb_ramp; zb_meas];
+      % --- concatenate ---
+      zb = [zb_flat; zb_slope; zb_meas];
+  end
 
   % x increases offshore -> onshore, starting at 0
   x  = (0:numel(zb)-1)' * dx;
@@ -157,10 +174,10 @@ function make_infile_from_frf_10day()
   in.dx = dx;
   in.x  = x;
   in.zb = zb;
-  in.fw = 0.015 * ones(size(zb));   % 
+  in.fw = 0.015 * ones(size(zb));
 
-  % quick sanity checks (helpful if something’s off)
-  assert(numel(in.x) == numel(in.zb) && numel(in.x) == numel(in.fw), "Profile vectors must match length.");
+  assert(numel(in.x) == numel(in.zb) && numel(in.x) == numel(in.fw), ...
+      "Profile vectors must match length.");
   
   % ---------------------------
   % Write infile
