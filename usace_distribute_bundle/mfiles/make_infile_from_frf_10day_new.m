@@ -6,6 +6,7 @@ function make_infile_from_frf_10day()
 %   - makeinfile_usace_vegfeature(in)
 %   - get_hourly_forcing(t0,t1,wave_source,wave_id,wl_product, ...)
 %       plus its helper functions (thredds_url, month_starts, read_thredds_*)
+%   - add_vegetation_profile_from_elevation()
 
   % ---------------------------
   % USER SETTINGS
@@ -178,6 +179,11 @@ function make_infile_from_frf_10day()
 
   assert(numel(in.x) == numel(in.zb) && numel(in.x) == numel(in.fw), ...
       "Profile vectors must match length.");
+
+  % ---------------------------
+  % External vegetation builder
+  % ---------------------------
+  in = add_vegetation_profile_from_elevation(in);
   
   % ---------------------------
   % Write infile

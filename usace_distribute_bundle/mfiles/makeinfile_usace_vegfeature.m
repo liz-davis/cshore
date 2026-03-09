@@ -103,14 +103,29 @@ end
 fprintf(fid,'%-8i                             ->NBINP \n',length(in.x));
 dum = [in.x(:) in.zb(:) in.fw(:)];
 fprintf(fid,'%11.6f%11.6f%11.6f\n',dum');
+
 if in.iveg==1 || in.iveg==3 
     fprintf(fid,'%10.6f                                ->VEGCD\n',in.veg_Cd );
     if in.iveg==3
        fprintf(fid,'%10.6f                                ->VEGCDM\n',in.veg_Cdm );
     end
-    dum = zeros(length(in.x(:)),4);
-    ind = find(in.x>=max(in.x)*in.veg_extent(1)&in.x<=max(in.x)*in.veg_extent(2));
-    dum(ind,:) = repmat([in.veg_n in.veg_dia in.veg_ht in.veg_rod],length(ind),1);
+
+    % scalar-style vegetation (original)
+    if isscalar(in.veg_n) && isscalar(in.veg_dia) && isscalar(in.veg_ht) && isscalar(in.veg_rod)
+        dum = zeros(length(in.x(:)),4);
+        ind = find(in.x>=max(in.x)*in.veg_extent(1) & in.x<=max(in.x)*in.veg_extent(2));
+        dum(ind,:) = repmat([in.veg_n in.veg_dia in.veg_ht in.veg_rod], length(ind), 1);
+
+    % vector-style vegetation (updated)
+    else
+        assert(numel(in.veg_n)   == numel(in.x), 'veg_n must match x length');
+        assert(numel(in.veg_dia) == numel(in.x), 'veg_dia must match x length');
+        assert(numel(in.veg_ht)  == numel(in.x), 'veg_ht must match x length');
+        assert(numel(in.veg_rod) == numel(in.x), 'veg_rod must match x length');
+
+        dum = [in.veg_n(:), in.veg_dia(:), in.veg_ht(:), in.veg_rod(:)];
+    end
+
     fprintf(fid,'%11.6f%11.6f%11.6f%11.6f\n',dum');
 end
 
