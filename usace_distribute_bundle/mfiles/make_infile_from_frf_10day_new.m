@@ -11,8 +11,8 @@ function make_infile_from_frf_10day()
   % ---------------------------
   % USER SETTINGS
   % ---------------------------
-  t0 = datetime(2020,09,10,0,0,0,'TimeZone','UTC');
-  t1 = datetime(2020,09,25,0,0,0,'TimeZone','UTC'); % end-exclusive [t0, t1)
+  t0 = datetime(2019,09,04,0,0,0,'TimeZone','UTC');
+  t1 = datetime(2019,09,10,0,0,0,'TimeZone','UTC'); % end-exclusive [t0, t1)
 
   % Waves: choose source and id
   %   FRF example: wave_source="frf"; wave_id="waverider-26m"
@@ -50,6 +50,46 @@ function make_infile_from_frf_10day()
   end
 
   % ---------------------------
+  % Estimate TWL using Stockdon et al. (2006)
+  % ---------------------------
+
+  g = 9.81;              % m/s^2
+  beta = 0.10;           % representative beach slope (m/m)
+
+  Hs = Tall.Hs(:);
+  Tp = Tall.Tp(:);
+  wl = Tall.wl(:);
+
+  % Deepwater wavelength
+  L0 = g .* Tp.^2 ./ (2*pi);
+
+  % Stockdon 2% exceedance runup
+  R2 = 1.1 .* ( ...
+      0.35 .* beta .* sqrt(Hs .* L0) + ...
+      0.5 .* sqrt(Hs .* L0 .* (0.563 .* beta.^2 + 0.004)) );
+
+  % Two TWL options:
+  TWL  = wl + R2;
+
+  % ---------------------------
+  % Plot
+  % ---------------------------
+  figure
+  plot(Tall.Properties.RowTimes, wl, 'DisplayName', 'Water level')
+  hold on
+  plot(Tall.Properties.RowTimes, TWL, 'DisplayName', 'TWL (wl + R2)')
+  ylabel('Elevation (m NAVD88)', 'FontWeight', 'bold')
+  xlabel('Time', 'FontWeight', 'bold')
+  title('Estimated Total Water Level (TWL)', 'FontWeight', 'bold')
+  grid on
+  legend('Location','best')
+
+  fprintf('\n--- TWL DIAGNOSTICS ---\n')
+  fprintf('Max WL: %.2f m NAVD88\n', max(wl))
+  fprintf('Max R2: %.2f m\n', max(R2))
+  fprintf('Max TWL: %.2f m NAVD88\n', max(TWL))
+
+  % ---------------------------
   % Build CSHORE boundary arrays from Tall
   % ---------------------------
   % Convert FRF/WIS Hs to Hrms typically used in CSHORE:
@@ -71,7 +111,7 @@ function make_infile_from_frf_10day()
   end
 
   % Setup at boundary
-  Wsetup = 0.2 * Hrms;
+  Wsetup = 0.25 * Hrms;
 
   % Time in seconds since model start (CSHORE wants seconds)
   rt = Tall.Properties.RowTimes;   % datetime vector
@@ -124,7 +164,7 @@ function make_infile_from_frf_10day()
   % External elevation profile (CSV with ONE column: zb values, NAVD88)
   % x increases offshore -> onshore, 1 m spacing
   % ---------------------------
-  profile_csv = "/Users/elizabeth/Downloads/output_1m_smoothed_flipped_duck_teddy.csv";
+  profile_csv = "/Users/elizabeth/Downloads/output_1m_smoothed_flipped_duck_dorian.csv";
 
   % inputs
   dx     = 1;        % m
@@ -179,6 +219,21 @@ function make_infile_from_frf_10day()
 
   assert(numel(in.x) == numel(in.zb) && numel(in.x) == numel(in.fw), ...
       "Profile vectors must match length.");
+
+  debug_profile = [in.x(:), in.zb(:)];
+  writematrix(debug_profile, 'debug_input_profile.csv');
+
+  fprintf('\n--- PROFILE DEBUG ---\n');
+  fprintf('Measured profile file: %s\n', profile_csv);
+  fprintf('Measured nodes: %d\n', numel(zb_meas));
+  fprintf('Final model nodes: %d\n', numel(in.zb));
+  fprintf('Model x range: %.1f to %.1f m\n', min(in.x), max(in.x));
+  fprintf('Model z range: %.2f to %.2f m\n', min(in.zb), max(in.zb));
+  fprintf('First measured elevation z0: %.3f m\n', z0);
+  fprintf('Last 5 measured z values:\n');
+  disp(zb_meas(end-4:end));
+  fprintf('Last 5 model z values:\n');
+  disp(in.zb(end-4:end));
 
   % ---------------------------
   % External vegetation builder

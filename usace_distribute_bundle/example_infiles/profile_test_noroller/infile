@@ -11,7 +11,7 @@ CSHORE model run defaults
 0                                         ->IPOND
 0                                         ->INFILT
 0                                         ->IWCINT
-1                                         ->IROLL 
+0                                         ->IROLL 
 0                                         ->IWIND 
 0                                         ->ITIDE 
 1                                         ->IVEG  
