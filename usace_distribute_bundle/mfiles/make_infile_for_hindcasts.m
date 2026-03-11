@@ -111,9 +111,9 @@ function make_infile_from_frf_10day()
   end
 
   % Setup at boundary
-  Wsetup = 0.25 * Hrms;
+  Wsetup = zeros(size(Hrms));
 
-  % Time in seconds since model start (CSHORE wants seconds)
+  % Time in seconds since model start
   rt = Tall.Properties.RowTimes;   % datetime vector
   tstart = rt(1);
   timebc_sec = seconds(rt - tstart);
