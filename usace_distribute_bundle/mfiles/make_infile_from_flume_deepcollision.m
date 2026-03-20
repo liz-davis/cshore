@@ -92,12 +92,25 @@ function make_infile_from_flume_deepcollision()
         in.iveg   = 1;
         in.veg_Cd = 1.0;
 
-        in.veg_n   = veg_n   * ones(size(in.x));
-        in.veg_dia = veg_dia * ones(size(in.x));
-        in.veg_ht  = veg_ht  * ones(size(in.x));
-        in.veg_rod = veg_rod * ones(size(in.x));
+        % initialize vegetation arrays with zeros everywhere
+        in.veg_n   = zeros(size(in.x));
+        in.veg_dia = zeros(size(in.x));
+        in.veg_ht  = zeros(size(in.x));
+        in.veg_rod = zeros(size(in.x));
+
+       % vegetation occupies the last 1 m of the profile (closest to dune)
+       veg_mask = in.x >= (max(in.x) - 1.0);
+
+       % assign uniform vegetation values within that 1 m zone
+       in.veg_n(veg_mask)   = veg_n;
+       in.veg_dia(veg_mask) = veg_dia;
+       in.veg_ht(veg_mask)  = veg_ht;
+       in.veg_rod(veg_mask) = veg_rod;
+
+       fprintf('Vegetated zone: x >= %.3f m\n', max(in.x) - 1.0);
+       fprintf('Vegetated nodes: %d of %d\n', sum(veg_mask), numel(in.x));
     else
-        in.iveg = 0;
+       in.iveg = 0;
     end
 
     % ---------------------------
