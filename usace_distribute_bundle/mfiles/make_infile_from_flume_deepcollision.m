@@ -13,18 +13,51 @@ function make_infile_from_flume_deepcollision()
     transect_mat = '/Users/elizabeth/cshore/usace_distribute_bundle/mfiles/final_transects_deepcollision.mat';
     wave_mat     = '/Users/elizabeth/cshore/usace_distribute_bundle/mfiles/TestC1-AB.mat';
 
-    profile_name = 'AB';   % options: 'A', 'AB', 'B', 'cntrl'
+    profile_name = 'cntrl';   % options: 'A', 'AB', 'B', 'cntrl'
 
     % flume sediment / grid
     dx  = 0.005;   % m
     d50 = 0.15;    % mm
 
     % vegetation properties from Bryant et al. (2019)
-    use_vegetation = true;
-    veg_n   = 158;      % stems/m^2
-    veg_ht  = 0.1525;   % m
-    veg_rod = 0.1525;   % m
-    veg_dia = 0.003175; % m
+    % defaults for full vegetation case
+    veg_n_full   = 158;      % stems/m^2
+    veg_ht_full  = 0.1525;   % m
+    veg_rod_full = 0.1525;   % m
+    veg_dia_full = 0.003175; % m
+
+    switch lower(profile_name)
+        case 'cntrl'
+            use_vegetation = false;
+            veg_n   = 0;
+            veg_ht  = 0;
+            veg_rod = 0;
+            veg_dia = 0;
+
+        case 'ab'
+            use_vegetation = true;
+            veg_n   = veg_n_full;
+            veg_ht  = veg_ht_full;
+            veg_rod = veg_rod_full;
+            veg_dia = veg_dia_full;
+
+        case 'a'
+            use_vegetation = true;
+            veg_n   = veg_n_full;
+            veg_ht  = veg_ht_full;
+            veg_rod = 0;             % no rooting depth
+            veg_dia = veg_dia_full;
+    
+        case 'b'
+            use_vegetation = true;
+            veg_n   = 0;             % no aboveground stems
+            veg_ht  = 0;
+            veg_rod = veg_rod_full;  % keep rooting depth
+            veg_dia = 0;
+
+        otherwise
+            error('Unknown profile_name: %s', profile_name);
+    end
 
     % forcing duration
     dt_bc   = 10;       % s
@@ -169,26 +202,26 @@ function make_infile_from_flume_deepcollision()
     if use_vegetation
         in.iveg   = 1;
         in.veg_Cd = 1.0;
-
+    
         % initialize vegetation arrays with zeros everywhere
         in.veg_n   = zeros(size(in.x));
         in.veg_dia = zeros(size(in.x));
         in.veg_ht  = zeros(size(in.x));
         in.veg_rod = zeros(size(in.x));
-
-       % vegetation occupies the last 1 m of the profile (closest to dune)
-       veg_mask = in.x >= (max(in.x) - 1.0);
-
-       % assign uniform vegetation values within that 1 m zone
-       in.veg_n(veg_mask)   = veg_n;
-       in.veg_dia(veg_mask) = veg_dia;
-       in.veg_ht(veg_mask)  = veg_ht;
-       in.veg_rod(veg_mask) = veg_rod;
-
-       fprintf('Vegetated zone: x >= %.3f m\n', max(in.x) - 1.0);
-       fprintf('Vegetated nodes: %d of %d\n', sum(veg_mask), numel(in.x));
+    
+        % vegetation occupies the last 1 m of the profile (closest to dune)
+        veg_mask = in.x >= (max(in.x) - 1.0);
+    
+        % assign treatment-specific values within that 1 m zone
+        in.veg_n(veg_mask)   = veg_n;
+        in.veg_dia(veg_mask) = veg_dia;
+        in.veg_ht(veg_mask)  = veg_ht;
+        in.veg_rod(veg_mask) = veg_rod;
+    
+        fprintf('Vegetated zone: x >= %.3f m\n', max(in.x) - 1.0);
+        fprintf('Vegetated nodes: %d of %d\n', sum(veg_mask), numel(in.x));
     else
-       in.iveg = 0;
+        in.iveg = 0;
     end
 
     % ---------------------------

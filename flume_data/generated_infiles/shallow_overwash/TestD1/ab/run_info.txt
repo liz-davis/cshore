@@ -1,0 +1,19 @@
+--- CSHORE RUN METADATA ---
+
+Timestamp: 30-Mar-2026 14:11:02
+
+Treatment folder: Above and Below Ground
+Wave group: Shallow Overwash
+Test ID: D1
+Profile: AB
+
+Wave file (original):
+/Users/elizabeth/cshore/flume_data/Above and Below Ground/Shallow Overwash/TestD1-AB.mat
+
+Transect file (original):
+/Users/elizabeth/cshore/flume_data/final_transects_shallowoverwash.mat
+
+Copied wave file:
+/Users/elizabeth/cshore/flume_data/generated_infiles/shallow_overwash/TestD1/ab/wave.mat
+Copied transect file:
+/Users/elizabeth/cshore/flume_data/generated_infiles/shallow_overwash/TestD1/ab/transect.mat

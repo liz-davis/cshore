@@ -1,0 +1,19 @@
+--- CSHORE RUN METADATA ---
+
+Timestamp: 30-Mar-2026 14:11:00
+
+Treatment folder: Control
+Wave group: Shallow Collision
+Test ID: M2
+Profile: cntrl
+
+Wave file (original):
+/Users/elizabeth/cshore/flume_data/Control/Shallow Collision/TestM2.mat
+
+Transect file (original):
+/Users/elizabeth/cshore/flume_data/final_transects_shallowcollisionSC1.mat
+
+Copied wave file:
+/Users/elizabeth/cshore/flume_data/generated_infiles/shallow_collision/TestM2/cntrl/wave.mat
+Copied transect file:
+/Users/elizabeth/cshore/flume_data/generated_infiles/shallow_collision/TestM2/cntrl/transect.mat

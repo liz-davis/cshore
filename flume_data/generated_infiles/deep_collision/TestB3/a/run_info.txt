@@ -1,0 +1,19 @@
+--- CSHORE RUN METADATA ---
+
+Timestamp: 30-Mar-2026 14:11:01
+
+Treatment folder: Above Ground
+Wave group: Deep Collision
+Test ID: B3
+Profile: A
+
+Wave file (original):
+/Users/elizabeth/cshore/flume_data/Above Ground/Deep Collision/TestB3-A.mat
+
+Transect file (original):
+/Users/elizabeth/cshore/flume_data/final_transects_deepcollision.mat
+
+Copied wave file:
+/Users/elizabeth/cshore/flume_data/generated_infiles/deep_collision/TestB3/a/wave.mat
+Copied transect file:
+/Users/elizabeth/cshore/flume_data/generated_infiles/deep_collision/TestB3/a/transect.mat
