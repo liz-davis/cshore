@@ -17,20 +17,20 @@ in.iwcint = 0;          % 0 = no W & C interaction , 1 = include W & C interacti
 in.iroll  = 1;          % 0 = no roller, 1 = roller
 in.iwind  = 0;          % 0 = no wind effect
 in.itide  = 0;          % 0 = no tidal effect on currents
-in.iveg   = 0;          % vegitation effect
-in.veg_Cd = 1;          % vegitation drag coeff
-in.veg_n  = 100;        % vegitation density
-in.veg_dia= .01;        % vegitation diam
-in.veg_ht = .20;        % vegitation height
-in.veg_rod= .1;         % vegitation erosion limit below sand for failure
-in.veg_extent = [.7 1]; % vegitation coverage as fraction of total domain length
+in.iveg   = 0;          % vegetation effect
+in.veg_Cd = 1;          % vegetation drag coeff
+in.veg_n  = 100;        % vegetation density
+in.veg_dia= .01;        % vegetation diam
+in.veg_ht = .20;        % vegetation height
+in.veg_rod= .1;         % vegetation erosion limit below sand for failure
+in.veg_extent = [.7 1]; % vegetation coverage as fraction of total domain length
 in.dx     = 1;          % constant dx 
-in.gamma  = .80;         % shallow water ratio of wave height to water depth
+in.gamma  = .5;         % shallow water ratio of wave height to water depth
 in.sporo  = 0.4;        % sediment porosity                        
 in.d50 = .3;            % d_50 in mm
 in.wf = vfall(in.d50,20,0); % fall velocity
 in.sg = 2.65;           % specific gravity
-in.effb   = 0.005;      % suspension efficiency due to breaking eB     
+in.effb   = 0.0025;      % suspension efficiency due to breaking eB     
 in.efff   = 0.01;       % suspension efficiency due to friction ef 
 in.slp    = .5;         % suspended load parameter               
 in.slpot  = .1;         % overtopping suspended load parameter               

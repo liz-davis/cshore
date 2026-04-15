@@ -1,0 +1,19 @@
+--- CSHORE RUN METADATA ---
+
+Timestamp: 13-Apr-2026 15:43:37
+
+Treatment folder: Control
+Wave group: Deep Collision
+Test ID: N3
+Profile: cntrl
+
+Wave file (original):
+/Users/elizabeth/cshore/flume_data/Control/Deep Collision/TestN3.mat
+
+Transect file (original):
+/Users/elizabeth/cshore/flume_data/final_transects_deepcollision.mat
+
+Copied wave file:
+/Users/elizabeth/cshore/flume_data/generated_infiles_sweep/deep_collision/TestN3/cntrl/combo_0023/wave.mat
+Copied transect file:
+/Users/elizabeth/cshore/flume_data/generated_infiles_sweep/deep_collision/TestN3/cntrl/combo_0023/transect.mat

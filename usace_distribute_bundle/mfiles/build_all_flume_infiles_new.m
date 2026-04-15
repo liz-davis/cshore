@@ -53,6 +53,14 @@ for it = 1:numel(treatment_folders)
     for ig = 1:numel(wave_groups)
         wave_group = wave_groups{ig};
 
+        % Skip certain wave groups
+        skip_groups = {'Shallow Collision', 'Shallow Collision 2'};
+
+        if any(strcmpi(wave_group, skip_groups))
+            fprintf('Skipping wave group: %s\n', wave_group);
+            continue
+        end
+
         if ~isKey(transect_map, wave_group)
             warning('No transect mapping found for wave group: %s', wave_group);
             continue

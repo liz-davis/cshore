@@ -1,7 +1,11 @@
-function build_single_flume_infile(transect_mat, wave_mat, profile_name, outdir, wave_group, test_id, treatment_folder)
+function build_single_flume_infile(transect_mat, wave_mat, profile_name, outdir, wave_group, test_id, treatment_folder, param_overrides)
 %BUILD_SINGLE_FLUME_INFILE
 % Build one CSHORE infile for a specified transect MAT, wave MAT, and profile.
-
+    
+    if nargin < 8 || isempty(param_overrides)
+        param_overrides = struct();
+    end
+   
     % flume sediment / grid
     dx  = 0.005;   % m
     d50 = 0.15;    % mm
@@ -63,6 +67,15 @@ function build_single_flume_infile(transect_mat, wave_mat, profile_name, outdir,
     in.ilab  = 0;
 
     % ---------------------------
+    % Apply parameter overrides for sweep
+    % ---------------------------
+    override_fields = fieldnames(param_overrides);
+    for k = 1:numel(override_fields)
+        fname = override_fields{k};
+        in.(fname) = param_overrides.(fname);
+    end
+
+    % ---------------------------
     % Load transect data
     % ---------------------------
     T = load(transect_mat);
@@ -121,8 +134,35 @@ function build_single_flume_infile(transect_mat, wave_mat, profile_name, outdir,
     z4 = z4(2:end);
 
     zb_ext = [z1; z2; z3; z4];
-    zb = [zb_ext; zb_meas];
-    x = (0:numel(zb)-1)' * dx;
+    % zb = [zb_ext; zb_meas]; old
+    % x = (0:numel(zb)-1)' * dx; old
+    
+    % ---------------------------
+    % Landward extension: wall + sand trap
+    % ---------------------------
+    L_wall = 0.75;   % m, short sloping wall length (estimated..)
+    L_trap = 3.0;   % m, flat sand-trap length (~11.0 m in the flume)
+
+    z_wall_top = zb_meas(end);     % last measured point = top of wall / back edge
+    wall_drop  = 0.371;            % m, wall height above flume floor from manuscript
+    z_trap     = z_wall_top - wall_drop;
+
+    % sloping wall down into trap
+    x5 = (dx:dx:L_wall)';
+    z5 = linspace(z_wall_top, z_trap, numel(x5)+1)';
+    z5 = z5(2:end);
+
+    % flat trap floor
+    x6 = (dx:dx:L_trap)';
+    z6 = z_trap * ones(size(x6));
+
+    % full profile
+    zb = [zb_ext; zb_meas; z5; z6];
+    x  = (0:numel(zb)-1)' * dx;
+
+    % index for where measured transect ends
+    idx_meas_end = numel(zb_ext) + numel(zb_meas);
+    x_meas_end_model = x(idx_meas_end);
 
     % ---------------------------
     % Vertical datum adjustment
@@ -137,6 +177,7 @@ function build_single_flume_infile(transect_mat, wave_mat, profile_name, outdir,
     in.fw = in.fric_fac * ones(size(zb));
 
     assert(numel(x) == numel(zb), 'Extended x and zb must have same length');
+    
 
     % ---------------------------
     % Wave BC
@@ -169,7 +210,11 @@ function build_single_flume_infile(transect_mat, wave_mat, profile_name, outdir,
         in.veg_ht  = zeros(size(in.x));
         in.veg_rod = zeros(size(in.x));
 
-        veg_mask = in.x >= (max(in.x) - 1.0);
+        % veg_mask = in.x >= (max(in.x) - 1.0);
+
+        % tie vegetation to the measured dune, not estimated sand trap
+        % extension
+        veg_mask = in.x >= (x_meas_end_model - 1.0) & in.x <= x_meas_end_model;
 
         in.veg_n(veg_mask)   = veg_n;
         in.veg_dia(veg_mask) = veg_dia;
@@ -185,7 +230,16 @@ function build_single_flume_infile(transect_mat, wave_mat, profile_name, outdir,
     safe_group   = lower(strrep(wave_group, ' ', '_'));
     safe_profile = lower(profile_name);
 
-    run_dir = fullfile(outdir, safe_group, ['Test' test_id], safe_profile);
+    %run_dir = fullfile(outdir, safe_group, ['Test' test_id], safe_profile);
+    safe_group   = lower(strrep(wave_group, ' ', '_'));
+    safe_profile = lower(profile_name);
+    
+    if isfield(param_overrides, 'combo_id')
+        combo_label = sprintf('combo_%04d', param_overrides.combo_id);
+        run_dir = fullfile(outdir, safe_group, ['Test' test_id], safe_profile, combo_label);
+    else
+        run_dir = fullfile(outdir, safe_group, ['Test' test_id], safe_profile);
+    end
 
     if ~exist(run_dir, 'dir')
         mkdir(run_dir);
@@ -232,6 +286,14 @@ function build_single_flume_infile(transect_mat, wave_mat, profile_name, outdir,
     meta.profile_name    = profile_name;
     meta.treatment       = treatment_folder;
     meta.timestamp       = datetime('now');
+
+    meta.param_overrides = param_overrides;
+
+    if isfield(in, 'effb');  meta.effb  = in.effb;  end
+    if isfield(in, 'efff');  meta.efff  = in.efff;  end
+    if isfield(in, 'slp');   meta.slp   = in.slp;   end
+    if isfield(in, 'slpot'); meta.slpot = in.slpot; end
+    if isfield(in, 'gamma'); meta.gamma = in.gamma; end
     
     save(fullfile(run_dir, 'run_metadata.mat'), '-struct', 'meta');
 
