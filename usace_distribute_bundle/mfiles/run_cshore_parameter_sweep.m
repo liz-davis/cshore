@@ -3,7 +3,7 @@ clear; clc;
 % ---------------------------
 % Paths
 % ---------------------------
-run_root = '/Users/elizabeth/cshore/flume_data/generated_infiles_sweep';
+run_root = '/Users/elizabeth/cshore/flume_data/generated_infiles_sweep_coarse';
 
 % Path to your CSHORE executable
 cshore_exe = '/Users/elizabeth/cshore/usace_distribute_bundle/example_infiles/cshore';

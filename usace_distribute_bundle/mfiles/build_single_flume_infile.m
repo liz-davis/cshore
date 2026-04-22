@@ -1,7 +1,11 @@
 function build_single_flume_infile(transect_mat, wave_mat, profile_name, outdir, wave_group, test_id, treatment_folder, param_overrides)
 %BUILD_SINGLE_FLUME_INFILE
 % Build one CSHORE infile for a specified transect MAT, wave MAT, and profile.
-    
+
+    if nargin < 7 || isempty(treatment_folder)
+        treatment_folder = '';
+    end
+
     if nargin < 8 || isempty(param_overrides)
         param_overrides = struct();
     end

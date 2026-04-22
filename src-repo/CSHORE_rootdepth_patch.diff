@@ -1,0 +1,67 @@
+--- /mnt/data/CSHORE_USACE.f	2026-04-22 14:23:58.493965778 +0000
++++ /mnt/data/CSHORE_USACE_rootdepth_patch.f	2026-04-22 14:23:59.169544519 +0000
+@@ -4238,6 +4238,8 @@
+      +   PBWD(NN),PSWD(NN),VSWD(NN),QSXWD(NN),QBXWD(NN),QRAWD(NN),
+      +     HDIP(NN),QSYWD(NN),QBYWD(NN),HPpad1(NN),HPpad2(NN),
+      +     qbxeq(nn),qsxeq(nn)
++      DOUBLE PRECISION KROOT,FVEGMIN,FVEG
++      DATA KROOT,FVEGMIN /8.D0,0.15D0/
+ C     
+       COMMON /OPTION/ TIME,IPROFL,IANGLE,IROLL,IWIND,IPERM,IOVER,IWCINT,
+      +   ISEDAV,IWTRAN,IVWALL(NL),ILAB,INFILT,IPOND,ITIDE,ILINE,IQYDY,
+@@ -4423,6 +4425,13 @@
+             DUMQ=QO(L)
+             QSX(J)=QSX(J)+AO*VS(J)*DUMQ/DUM
+           ENDIF
++C     Apply belowground root-depth reduction only to offshore transport
++          IF(IVEG.GE.1.AND.UPROOT(J,L).GT.0.D0.AND.VEGRH(J,L).GT.0.D0) THEN
++            FVEG=DEXP(-KROOT*VEGRH(J,L))
++            IF(FVEG.LT.FVEGMIN) FVEG=FVEGMIN
++            IF(QBX(J).LT.0.D0) QBX(J)=FVEG*QBX(J)
++            IF(QSX(J).LT.0.D0) QSX(J)=FVEG*QSX(J)
++          ENDIF
+           QRAW(J) = (QBX(J) + QSX(J))/SPORO1
+  110    CONTINUE
+ C     
+@@ -4594,6 +4603,13 @@
+             ENDIF
+             QSXWD(J)=QSXWD(J)+AO*VSWD(J)*DUMQ/DUM
+           ENDIF
++C     Apply belowground root-depth reduction only to offshore transport
++          IF(IVEG.GE.1.AND.UPROOT(J,L).GT.0.D0.AND.VEGRH(J,L).GT.0.D0) THEN
++            FVEG=DEXP(-KROOT*VEGRH(J,L))
++            IF(FVEG.LT.FVEGMIN) FVEG=FVEGMIN
++            IF(QBXWD(J).LT.0.D0) QBXWD(J)=FVEG*QBXWD(J)
++            IF(QSXWD(J).LT.0.D0) QSXWD(J)=FVEG*QSXWD(J)
++          ENDIF
+ C     
+ C     If IGMILD=1, adjust QBXWD as follows 
+             IF(IGMILD.EQ.1) THEN
+@@ -4713,6 +4729,13 @@
+             QBX(J)=BRF*QBX(J)
+           ENDIF
+           QSX(J) = ASLOPE(J)*UMEAN(J)*VS(J)
++C     Apply belowground root-depth reduction only to offshore transport
++          IF(IVEG.GE.1.AND.UPROOT(J,L).GT.0.D0.AND.VEGRH(J,L).GT.0.D0) THEN
++            FVEG=DEXP(-KROOT*VEGRH(J,L))
++            IF(FVEG.LT.FVEGMIN) FVEG=FVEGMIN
++            IF(QBX(J).LT.0.D0) QBX(J)=FVEG*QBX(J)
++            IF(QSX(J).LT.0.D0) QSX(J)=FVEG*QSX(J)
++          ENDIF
+           QRAW(J) = (QBX(J) + QSX(J))/SPORO1
+           IF(IANGLE.EQ.1) THEN
+             QBY(J)=0.D0
+@@ -4823,6 +4846,13 @@
+             QSX(J)=QSX(J)+AO*VS(J)*DUMQ/DUM
+           ENDIF
+           QSY(J) = VMEAN(J)*VS(J)
++C     Apply belowground root-depth reduction only to offshore transport
++          IF(IVEG.GE.1.AND.UPROOT(J,L).GT.0.D0.AND.VEGRH(J,L).GT.0.D0) THEN
++            FVEG=DEXP(-KROOT*VEGRH(J,L))
++            IF(FVEG.LT.FVEGMIN) FVEG=FVEGMIN
++            IF(QBX(J).LT.0.D0) QBX(J)=FVEG*QBX(J)
++            IF(QSX(J).LT.0.D0) QSX(J)=FVEG*QSX(J)
++          ENDIF
+           QRAW(J) = (QBX(J) + QSX(J))/SPORO1
+  190      CONTINUE
+ C     

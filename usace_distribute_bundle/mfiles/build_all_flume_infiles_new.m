@@ -54,7 +54,7 @@ for it = 1:numel(treatment_folders)
         wave_group = wave_groups{ig};
 
         % Skip certain wave groups
-        skip_groups = {'Shallow Collision', 'Shallow Collision 2'};
+        skip_groups = {'Deep Collision', 'Deep Overwash', 'Shallow Overwash'};
 
         if any(strcmpi(wave_group, skip_groups))
             fprintf('Skipping wave group: %s\n', wave_group);

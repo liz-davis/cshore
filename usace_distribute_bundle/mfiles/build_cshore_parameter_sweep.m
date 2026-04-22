@@ -16,13 +16,9 @@ end
 % Target cases to sweep
 % ---------------------------
 target_cases = { ...
-    struct('treatment_folder', 'Control', 'wave_group', 'Deep Collision',   'test_id', 'N1', 'profile_name', 'cntrl'), ...
-    struct('treatment_folder', 'Control', 'wave_group', 'Deep Collision',   'test_id', 'N2', 'profile_name', 'cntrl'), ...
-    struct('treatment_folder', 'Control', 'wave_group', 'Deep Collision',   'test_id', 'N3', 'profile_name', 'cntrl'), ...
-    struct('treatment_folder', 'Control', 'wave_group', 'Deep Overwash',    'test_id', 'O1', 'profile_name', 'cntrl'), ...
-    struct('treatment_folder', 'Control', 'wave_group', 'Shallow Overwash', 'test_id', 'E1', 'profile_name', 'cntrl'), ...
-    struct('treatment_folder', 'Control', 'wave_group', 'Shallow Overwash', 'test_id', 'E2', 'profile_name', 'cntrl'), ...
-    struct('treatment_folder', 'Control', 'wave_group', 'Shallow Overwash', 'test_id', 'E3', 'profile_name', 'cntrl')  ...
+    struct('treatment_folder', 'Control', 'wave_group', 'Shallow Collision',   'test_id', 'M1', 'profile_name', 'cntrl'), ...
+    struct('treatment_folder', 'Control', 'wave_group', 'Shallow Collision',   'test_id', 'M2', 'profile_name', 'cntrl'), ...
+    struct('treatment_folder', 'Control', 'wave_group', 'Shallow Collision',   'test_id', 'M3', 'profile_name', 'cntrl') ...
 };
 
 % ---------------------------
@@ -38,11 +34,17 @@ transect_map('Shallow Overwash')    = fullfile(base_data_dir, 'final_transects_s
 % ---------------------------
 % Parameter grid -- ADJUST AS NEEDED
 % ---------------------------
-effb_vals  = [0.0025, 0.0050];
-efff_vals  = [0.0040, 0.0100];
-slp_vals   = [0.35, 0.50];
-slpot_vals = [0.04, 0.10];
-gamma_vals = [0.45, 0.55];
+% targeted for lower stoss slope/ toe over-deposition
+effb_vals     = [0.0015, 0.0025, 0.0040];
+efff_vals     = [0.0020, 0.0040, 0.0070];
+slp_vals      = [0.20, 0.35, 0.50];
+gamma_vals    = [0.10, 0.15, 0.20, 0.25];
+fric_fac_vals = [0.015, 0.025, 0.035];
+tanphi_vals   = [0.630, 0.700, 0.800];
+blp_vals      = [0.0005, 0.0010];
+
+% Hold fixed for now unless you specifically want overtopping sensitivity
+slpot_fixed = 0.10;
 
 % ---------------------------
 % Build all parameter combinations
@@ -53,18 +55,25 @@ combo_table = [];
 for i1 = 1:numel(effb_vals)
     for i2 = 1:numel(efff_vals)
         for i3 = 1:numel(slp_vals)
-            for i4 = 1:numel(slpot_vals)
-                for i5 = 1:numel(gamma_vals)
+            for i4 = 1:numel(gamma_vals)
+                for i5 = 1:numel(fric_fac_vals)
+                    for i6 = 1:numel(tanphi_vals)
+                        for i7 = 1:numel(blp_vals)
 
-                    combo_id = combo_id + 1;
+                            combo_id = combo_id + 1;
 
-                    combo_table(combo_id).combo_id = combo_id;
-                    combo_table(combo_id).effb  = effb_vals(i1);
-                    combo_table(combo_id).efff  = efff_vals(i2);
-                    combo_table(combo_id).slp   = slp_vals(i3);
-                    combo_table(combo_id).slpot = slpot_vals(i4);
-                    combo_table(combo_id).gamma = gamma_vals(i5);
+                            combo_table(combo_id).combo_id  = combo_id;
+                            combo_table(combo_id).effb      = effb_vals(i1);
+                            combo_table(combo_id).efff      = efff_vals(i2);
+                            combo_table(combo_id).slp       = slp_vals(i3);
+                            combo_table(combo_id).gamma     = gamma_vals(i4);
+                            combo_table(combo_id).fric_fac  = fric_fac_vals(i5);
+                            combo_table(combo_id).tanphi    = tanphi_vals(i6);
+                            combo_table(combo_id).blp       = blp_vals(i7);
+                            combo_table(combo_id).slpot     = slpot_fixed;
 
+                        end
+                    end
                 end
             end
         end
@@ -113,21 +122,27 @@ for icase = 1:numel(target_cases)
     for icombo = 1:numel(combo_table)
 
         param_overrides = struct();
-        param_overrides.combo_id = combo_table(icombo).combo_id;
-        param_overrides.effb  = combo_table(icombo).effb;
-        param_overrides.efff  = combo_table(icombo).efff;
-        param_overrides.slp   = combo_table(icombo).slp;
-        param_overrides.slpot = combo_table(icombo).slpot;
-        param_overrides.gamma = combo_table(icombo).gamma;
+        param_overrides.combo_id  = combo_table(icombo).combo_id;
+        param_overrides.effb      = combo_table(icombo).effb;
+        param_overrides.efff      = combo_table(icombo).efff;
+        param_overrides.slp       = combo_table(icombo).slp;
+        param_overrides.slpot     = combo_table(icombo).slpot;
+        param_overrides.gamma     = combo_table(icombo).gamma;
+        param_overrides.fric_fac  = combo_table(icombo).fric_fac;
+        param_overrides.tanphi    = combo_table(icombo).tanphi;
+        param_overrides.blp       = combo_table(icombo).blp;
 
         try
             fprintf('\n-----------------------------\n');
             fprintf('Building combo %04d / %04d\n', icombo, numel(combo_table));
-            fprintf('effb  = %.4f\n', param_overrides.effb);
-            fprintf('efff  = %.4f\n', param_overrides.efff);
-            fprintf('slp   = %.4f\n', param_overrides.slp);
-            fprintf('slpot = %.4f\n', param_overrides.slpot);
-            fprintf('gamma = %.4f\n', param_overrides.gamma);
+            fprintf('effb      = %.4f\n', param_overrides.effb);
+            fprintf('efff      = %.4f\n', param_overrides.efff);
+            fprintf('slp       = %.4f\n', param_overrides.slp);
+            fprintf('slpot     = %.4f\n', param_overrides.slpot);
+            fprintf('gamma     = %.4f\n', param_overrides.gamma);
+            fprintf('fric_fac  = %.4f\n', param_overrides.fric_fac);
+            fprintf('tanphi    = %.4f\n', param_overrides.tanphi);
+            fprintf('blp       = %.4f\n', param_overrides.blp);
 
             build_single_flume_infile( ...
                 transect_mat, ...

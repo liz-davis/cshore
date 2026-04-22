@@ -1,0 +1,10 @@
+case_relpath,status,n_time_orig,n_time_new,max_abs_diff,rmse_diff
+TestD1-A/a,identical,121,121,0,0
+TestD1-B/b,different,121,121,0.022303963,0.00121248592673005
+TestD2-A/a,identical,121,121,0,0
+TestD2-B/b,different,121,121,0.022303552,0.00121240653360845
+TestD3-A/a,identical,121,121,0,0
+TestD3-B/b,different,121,121,0.02313076,0.00125221239759376
+TestR1/cntrl,identical,121,121,0,0
+TestR2/cntrl,identical,121,121,0,0
+TestR3/cntrl,identical,121,121,0,0

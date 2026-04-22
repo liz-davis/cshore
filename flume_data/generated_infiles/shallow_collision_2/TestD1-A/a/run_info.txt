@@ -1,0 +1,19 @@
+--- CSHORE RUN METADATA ---
+
+Timestamp: 20-Apr-2026 12:22:19
+
+Treatment folder: 
+Wave group: Shallow Collision 2
+Test ID: D1-A
+Profile: A
+
+Wave file (original):
+/Users/elizabeth/cshore/flume_data/Above Ground/Shallow Collision 2/TestD1-A.mat
+
+Transect file (original):
+/Users/elizabeth/cshore/flume_data/final_transects_shallowcollisionSC2.mat
+
+Copied wave file:
+/Users/elizabeth/cshore/flume_data/generated_infiles/shallow_collision_2/TestD1-A/a/wave.mat
+Copied transect file:
+/Users/elizabeth/cshore/flume_data/generated_infiles/shallow_collision_2/TestD1-A/a/transect.mat

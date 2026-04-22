@@ -41,8 +41,8 @@ profile_names = {'cntrl','A','AB','B'};
 transect_map = containers.Map;
 transect_map('Deep Collision')      = fullfile(base_data_dir, 'final_transects_deepcollision.mat');
 transect_map('Deep Overwash')       = fullfile(base_data_dir, 'final_transects_deepoverwash.mat');
-transect_map('Shallow Collision')   = fullfile(base_data_dir, 'final_transects_shallowcollision.mat');
-transect_map('Shallow Collision 2') = fullfile(base_data_dir, 'final_transects_shallowcollision2.mat');
+transect_map('Shallow Collision')   = fullfile(base_data_dir, 'final_transects_shallowcollisionSC1.mat');
+transect_map('Shallow Collision 2') = fullfile(base_data_dir, 'final_transects_shallowcollisionSC2.mat');
 transect_map('Shallow Overwash')    = fullfile(base_data_dir, 'final_transects_shallowoverwash.mat');
 
 % ---------------------------

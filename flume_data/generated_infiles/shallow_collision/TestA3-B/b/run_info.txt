@@ -1,0 +1,19 @@
+--- CSHORE RUN METADATA ---
+
+Timestamp: 21-Apr-2026 12:24:27
+
+Treatment folder: 
+Wave group: Shallow Collision
+Test ID: A3-B
+Profile: B
+
+Wave file (original):
+/Users/elizabeth/cshore/flume_data/Below Ground/Shallow Collision/TestA3-B.mat
+
+Transect file (original):
+/Users/elizabeth/cshore/flume_data/final_transects_shallowcollisionSC1.mat
+
+Copied wave file:
+/Users/elizabeth/cshore/flume_data/generated_infiles_2/shallow_collision/TestA3-B/b/wave.mat
+Copied transect file:
+/Users/elizabeth/cshore/flume_data/generated_infiles_2/shallow_collision/TestA3-B/b/transect.mat
